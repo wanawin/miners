@@ -1,0 +1,667 @@
+CORE 025 DEEP TRAIT MINER
+PHASE 2 / PASS 2 STEP-BY-STEP GUIDE
+Written very simply and very carefully
+
+============================================================
+1. WHAT PASS 2 IS
+============================================================
+
+Think of Pass 1 like this:
+
+Pass 1 looks at your whole class at school and says:
+"These are the students who look the most alike."
+
+Pass 2 does something different.
+
+Pass 2 says:
+"Okay, now that I found one group, what about the ones that group missed?"
+OR
+"Which ones got mixed into the group by mistake?"
+OR
+"Can I search inside just one smaller type of group?"
+
+So Pass 2 is the app's way of doing a SECOND search after the first search.
+
+It is like:
+- first search = big search
+- second search = smart cleanup search
+
+Pass 2 is NOT there to replace Pass 1.
+Pass 2 is there to help you:
+- find more hidden patterns
+- find a second bucket
+- find mistakes
+- find cleanup filters
+- search only inside a smaller group
+
+============================================================
+2. VERY IMPORTANT RULE
+============================================================
+
+After Pass 1, you DO NOT upload a new file for Pass 2.
+
+Use the SAME file that you already uploaded.
+
+The app keeps the first results inside itself.
+
+So the normal order is:
+
+1. Upload your per-event file
+2. Run Pass 1
+3. Pick a bucket from Pass 1
+4. Choose a Pass 2 mode
+5. Run Pass 2
+
+That is all.
+
+============================================================
+3. WHAT YOU NEED BEFORE USING PASS 2
+============================================================
+
+Before Pass 2 can work well, you need:
+
+A. A per-event file uploaded
+The file should already have things like:
+- seed
+- true_member
+- optional date
+- optional stream
+
+B. Pass 1 already run
+
+C. At least one first-pass bucket selected
+Some Pass 2 modes need a selected bucket.
+Some do not.
+
+============================================================
+4. WHERE TO LOOK ON THE SCREEN
+============================================================
+
+On the app screen, look at the left side.
+
+You will see:
+
+GLOBAL MINING SETTINGS
+- Separator min support
+- Bucket min support
+- Bucket top K traits
+- Bucket max depth
+- Rows to display per table
+- Mine level
+- Objective selector
+
+SECOND-PASS CONTROLS
+- Target member
+- Pass 2 subset mode
+
+Then, in the main middle area, you will see:
+
+- Selected first-pass bucket for Pass 2
+- Pass 1
+- Pass 1 Results
+- Pass 2
+- Pass 2 Results
+
+============================================================
+5. SIMPLE MEANING OF THE IMPORTANT CONTROLS
+============================================================
+
+A. TARGET MEMBER
+
+This means:
+"Which winning member am I studying right now?"
+
+Choices:
+- 0025
+- 0225
+- 0255
+
+If you choose 0255, then Pass 2 will focus on 0255.
+
+B. SELECTED FIRST-PASS BUCKET FOR PASS 2
+
+This is one of the most important parts.
+
+It is a dropdown.
+It might look like this:
+
+2 | support=6 | hit_rate=1.000 | cnt_0_3_in[3,4] AND seed_sum_mod4_in[1,2]
+
+This means:
+- bucket number = 2
+- support = 6
+- hit_rate = 1.000
+- traits inside the bucket are shown after that
+
+Very simple meaning:
+This is the Pass 1 bucket you want Pass 2 to study.
+
+Pass 2 may ask:
+- What did this bucket miss?
+- What did this bucket get wrong?
+- What does this bucket cover?
+
+C. PASS 2 SUBSET MODE
+
+This is the second most important part.
+
+It tells the app:
+"What smaller group should Pass 2 study?"
+
+This is like giving Pass 2 a mission.
+
+Different missions mean different results.
+
+============================================================
+6. THE BEST ORDER TO USE PASS 2
+============================================================
+
+Use this order most of the time:
+
+STEP 1:
+Run Pass 1 on the full dataset.
+
+STEP 2:
+Go to the Stacked Buckets tab for your target member.
+
+STEP 3:
+Choose a good first-pass bucket.
+
+STEP 4:
+Choose a Pass 2 subset mode.
+
+STEP 5:
+Run Pass 2.
+
+STEP 6:
+Look at Pass 2 Results for:
+- Top single traits
+- Separator traits
+- Stacked buckets
+
+STEP 7:
+Decide whether Pass 2 found:
+- a new bucket
+- a cleanup rule
+- a smaller special pocket
+- nothing useful
+
+============================================================
+7. HOW TO PICK A FIRST-PASS BUCKET
+============================================================
+
+A first-pass bucket is usually better when:
+
+- hit_rate is high
+- support is not tiny
+- the traits make some logical sense
+- it is not just a weak or silly micro-pattern
+
+Good signs:
+- hit_rate is strong
+- support is at least somewhat useful
+- it seems like a clean pattern
+
+Careful signs:
+- support is only 2 or 3
+- the bucket is too tiny
+- the pattern looks strange and fragile
+
+A tiny perfect bucket can still be useful.
+But remember:
+a perfect tiny bucket is not the same thing as a full model.
+
+============================================================
+8. WHAT EACH PASS 2 MODE MEANS
+============================================================
+
+MODE 1: FULL DATASET AGAIN
+
+Meaning:
+Run the miner again on the whole dataset.
+
+Use this when:
+- you want another full search
+- you changed settings
+- you want to compare results after changing mine level or support
+
+This mode does NOT depend on a selected bucket.
+
+Think of it like:
+"Start over and search the whole box again."
+
+MODE 2: MEMBER-ONLY FULL
+
+Meaning:
+Study only rows for one selected member.
+
+If target member is 0255, the app studies only 0255 rows.
+
+Use this when:
+- you want to understand one member much more deeply
+- you want to see what 0255 rows look like without mixing all members together
+
+Think of it like:
+"Only show me the red marbles. I want to study just those."
+
+MODE 3: NO-9 REGIME
+
+Meaning:
+Study only rows whose seed does NOT contain digit 9.
+
+Use this when:
+- you think no-9 behaves differently
+- you want a cleaner subgroup
+
+Think of it like:
+"Only show me rows with no digit 9."
+
+MODE 4: HAS-9 REGIME
+
+Meaning:
+Study only rows whose seed DOES contain digit 9.
+
+Use this when:
+- you believe has-9 rows are their own world
+- you want to see if they need their own bucket logic
+
+Think of it like:
+"Only show me rows that contain 9."
+
+MODE 5: PAIR-ONLY REGIME
+
+Meaning:
+Study only rows that have pair-or-more type structures.
+
+Use this when:
+- pair rows behave differently from all-unique rows
+- you want to mine inside repeated-digit structures
+
+Think of it like:
+"Only show me rows where there is some repetition."
+
+MODE 6: ALL-UNIQUE REGIME
+
+Meaning:
+Study only rows with all unique digits.
+
+Use this when:
+- all-unique rows seem different from pair rows
+- you want a cleaner non-repeating subgroup
+
+Think of it like:
+"Only show me rows where all digits are different."
+
+MODE 7: UNEXPLAINED TARGET WINNERS
+
+Meaning:
+Take your selected first-pass bucket and ask:
+
+"Which target winners did this bucket MISS?"
+
+If target member is 0255, this means:
+show me 0255 winners NOT captured by the selected first-pass bucket.
+
+Use this when:
+- you want Bucket #2
+- you want another hidden winner pattern
+- you want to explain leftover winners
+
+This mode DOES need a selected bucket.
+
+Think of it like:
+"My first net caught some fish. Show me the fish that slipped away."
+
+IMPORTANT:
+If this comes back empty, that usually means your selected first-pass bucket already covered all or almost all of the target winners in that dataset.
+
+That is not a bug.
+That just means there is little or nothing left for this mode to study.
+
+MODE 8: FALSE POSITIVES
+
+Meaning:
+Take your selected first-pass bucket and ask:
+
+"Which rows did this bucket include by mistake?"
+
+If target member is 0255, this means:
+show me rows caught by the 0255 bucket that were NOT truly 0255.
+
+Use this when:
+- you want cleanup logic
+- you want anti-buckets
+- you want to remove mistakes
+
+This mode DOES need a selected bucket.
+
+Think of it like:
+"My first sorting rule grabbed some wrong toys. Show me the wrong toys."
+
+This is one of the best cleanup modes.
+
+MODE 9: COVERED ROWS
+
+Meaning:
+Show only the rows captured by the selected bucket.
+
+Use this when:
+- you want to study what the bucket IS catching
+- you want to understand the bucket's personality
+- you want to mine inside that covered group again
+
+This mode DOES need a selected bucket.
+
+Think of it like:
+"Only show me the things this basket already caught."
+
+MODE 10: BUCKET ERROR ROWS
+
+Meaning:
+Show the problem rows around the selected bucket.
+
+This combines:
+- winners the bucket missed
+- wrong rows the bucket included
+
+Use this when:
+- you want balanced correction logic
+- you want to study the bucket's mistakes
+- you want both missed and wrong cases together
+
+This mode DOES need a selected bucket.
+
+Think of it like:
+"Show me everything this bucket messed up."
+
+This is one of the strongest advanced modes.
+
+============================================================
+9. THE EASIEST WAY TO START USING PASS 2
+============================================================
+
+If you are unsure what to do, use this very simple starting recipe:
+
+FOR BUILDING A SECOND BUCKET:
+1. Choose target member
+2. Choose a good first-pass bucket
+3. Pass 2 mode = Unexplained target winners
+4. Run Pass 2
+5. Look at Stacked buckets under Pass 2 for that member
+
+FOR BUILDING CLEANUP RULES:
+1. Choose target member
+2. Choose a good first-pass bucket
+3. Pass 2 mode = False positives
+4. Run Pass 2
+5. Look at Separator traits and Stacked buckets
+
+FOR STUDYING JUST ONE MEMBER:
+1. Choose target member
+2. Pass 2 mode = Member-only full
+3. Run Pass 2
+4. Look at all three tabs
+
+============================================================
+10. WHAT TO DO IF PASS 2 IS EMPTY
+============================================================
+
+Sometimes Pass 2 shows an empty table.
+
+This does NOT always mean something is broken.
+
+It can mean:
+
+A. There were no rows left in that subset
+Example:
+Your selected first-pass bucket already captured all the target winners.
+So "Unexplained target winners" has nothing left to study.
+
+B. The subset is too small
+Maybe only 1 or 2 rows are left.
+That is too tiny for good bucket building.
+
+C. Your support settings are too strict
+If support is too high, small leftover groups cannot form buckets.
+
+If Pass 2 is empty, try this order:
+
+1. Change Pass 2 mode
+   Try False positives or Member-only full
+
+2. Lower Bucket min support
+   Example: try 4 or even 3 if needed
+
+3. Increase Bucket top K traits
+   Example: 120 or 150
+
+4. Rerun Pass 1 if settings changed
+
+============================================================
+11. HOW TO READ PASS 2 RESULTS
+============================================================
+
+After Pass 2 runs, scroll down to:
+
+PASS 2 RESULTS
+
+Then look for your target member:
+- Member 0025
+- Member 0225
+- Member 0255
+
+Inside that member, you will see 3 tabs:
+
+A. TOP SINGLE TRAITS
+
+These are single trait clues.
+
+They are useful, but by themselves they are usually not the final answer.
+
+Use them to:
+- learn what stands out
+- get ideas
+- see which single traits are strongest
+
+B. SEPARATOR TRAITS
+
+These are traits that separate very strongly.
+
+These are often useful for:
+- filtering
+- cleanup
+- anti-buckets
+- finding what should be excluded
+
+C. STACKED BUCKETS
+
+This is the most important tab for building layered logic.
+
+These are combinations of traits.
+Not just one trait, but several traits stacked together.
+
+This is where you often find:
+- Bucket #2
+- cleanup buckets
+- rescue pockets
+- real layered patterns
+
+============================================================
+12. HOW TO PICK A GOOD PASS 2 BUCKET
+============================================================
+
+When you look at Pass 2 stacked buckets, a better bucket usually has:
+
+- strong hit_rate
+- enough support to matter
+- traits that are not silly or tiny accidents
+- something meaningfully different from Bucket #1
+
+Good signs:
+- hit_rate is strong
+- support is not tiny
+- the bucket feels like a new pattern, not just a copy
+
+Be careful when:
+- support is only 2 or 3
+- the bucket is too narrow
+- the bucket only works on almost nothing
+
+============================================================
+13. WHAT THE YELLOW RIBBON MEANS
+============================================================
+
+Sometimes you will see a yellow message saying current settings differ from stored results.
+
+This means:
+- you changed a setting after the last run
+- but the app is still showing stored results from the earlier run
+
+This is not an error.
+
+It just means:
+"If you want new results with the new settings, click Run again."
+
+Simple rule:
+- if you changed settings and want fresh results, rerun
+- if you did not mean to change anything, you can ignore it
+
+============================================================
+14. WHAT THE DOWNLOAD BUTTONS DO
+============================================================
+
+The download buttons let you save:
+- summary text
+- feature table
+- all-member scores
+- member single traits
+- member separators
+- member buckets
+
+Because the app stores results in session state, downloads should not wipe your results.
+
+If you want to clear everything on purpose, use:
+- Clear stored results
+
+============================================================
+15. THE BEST BEGINNER WORKFLOW
+============================================================
+
+If you are still unsure, use this exact beginner workflow:
+
+PHASE A - FIRST SEARCH
+1. Upload your per-event file
+2. Set mine level
+3. Run Pass 1
+4. Go to your target member
+5. Open Stacked buckets
+6. Pick one good bucket
+
+PHASE B - SECOND SEARCH
+7. In Selected first-pass bucket for Pass 2, choose that bucket
+8. Set Target member to the same member you are studying
+9. Set Pass 2 mode to Unexplained target winners
+10. Run Pass 2
+11. Go to Pass 2 Results
+12. Open the same member
+13. Open Stacked buckets
+14. Check whether a second useful bucket appears
+
+PHASE C - CLEANUP SEARCH
+15. Keep the same selected bucket
+16. Change Pass 2 mode to False positives
+17. Run Pass 2
+18. Look at Separator traits and Stacked buckets
+19. Search for cleanup logic
+
+============================================================
+16. A VERY SIMPLE REAL-LIFE WAY TO THINK ABOUT IT
+============================================================
+
+Imagine you are sorting socks.
+
+Pass 1:
+You find one good rule:
+"All red socks with stripes go in Box 1."
+
+Pass 2 can then ask:
+- Which red striped socks did Box 1 miss?
+- Which socks got put in Box 1 by mistake?
+- What do the missed socks have in common?
+- What do the mistaken socks have in common?
+
+That is exactly what Pass 2 is doing with number patterns.
+
+============================================================
+17. QUICK CHEAT SHEET
+============================================================
+
+If you want MORE winner buckets:
+- Use Unexplained target winners
+
+If you want CLEANUP rules:
+- Use False positives
+
+If you want to STUDY one member by itself:
+- Use Member-only full
+
+If you want to STUDY a specific kind of seed:
+- Use No-9, Has-9, Pair-only, or All-unique
+
+If you want to STUDY what a bucket catches:
+- Use Covered rows
+
+If you want to STUDY what a bucket got wrong:
+- Use Bucket error rows
+
+============================================================
+18. IF YOU FEEL LOST, USE THIS SAFE ORDER
+============================================================
+
+1. Run Pass 1
+2. Pick a bucket
+3. Run Pass 2 = Unexplained target winners
+4. Read Pass 2 stacked buckets
+5. Run Pass 2 = False positives
+6. Read Pass 2 separator traits
+7. Compare the two
+
+That is the safest basic pattern.
+
+============================================================
+19. FINAL SUMMARY
+============================================================
+
+Pass 2 is not there to confuse you.
+It is there to ask smarter follow-up questions after Pass 1.
+
+Pass 1 asks:
+"What is the first strong pattern?"
+
+Pass 2 asks:
+"What did that pattern miss?"
+"What did that pattern get wrong?"
+"What happens if I search inside a smaller group?"
+
+So the heart of Pass 2 is this:
+
+Pick a bucket.
+Pick a mission.
+Run the second search.
+Read the results.
+
+That is all.
+
+============================================================
+20. ULTRA-SHORT VERSION
+============================================================
+
+If you only remember 5 things, remember these:
+
+1. Do not upload a new file for Pass 2.
+2. Pick a first-pass bucket first.
+3. Unexplained target winners = find more winner buckets.
+4. False positives = find cleanup rules.
+5. Pass 2 results are shown under your target member, especially in Stacked buckets.
+
+END OF GUIDE

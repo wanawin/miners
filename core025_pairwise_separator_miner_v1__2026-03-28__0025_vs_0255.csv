@@ -1,0 +1,3 @@
+pair,trait,support,preferred_support_met,winner_member,loser_member,winner_rate,loser_rate,pair_gap,stream_count,month_count,rate_0025,rate_0255,left_count,right_count
+0025_vs_0255,cnt8=1,63,1,0025,0255,0.6507936507936508,0.3492063492063492,0.3015873015873016,45,34,0.6507936507936508,0.3492063492063492,41,22
+0025_vs_0255,has8=1,75,1,0025,0255,0.64,0.36,0.28,49,35,0.64,0.36,48,27

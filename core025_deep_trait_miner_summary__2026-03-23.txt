@@ -1,0 +1,108 @@
+CORE 025 DEEP TRAIT MINER SUMMARY
+Generated: 2026-03-24 00:02:33 UTC
+
+Detected columns:
+  - seed_col: PrevSeed
+  - member_col: WinningMember
+  - date_col: PlayDate
+  - stream_col: StreamKey
+
+Usable rows: 28
+Member counts:
+  - 0025: 11
+  - 0225: 8
+  - 0255: 9
+
+=== MEMBER 0025 ===
+Top single traits:
+  - seed_sum_in[18,20] | support=4 | hit_rate_true=1.000 | gap=0.708
+  - seed_sum==15 | support=3 | hit_rate_true=1.000 | gap=0.680
+  - seed_sum_lastdigit==5 | support=3 | hit_rate_true=1.000 | gap=0.680
+  - seed_sum_lastdigit==8 | support=3 | hit_rate_true=1.000 | gap=0.680
+  - seed_even_cnt==4 | support=3 | hit_rate_true=1.000 | gap=0.680
+  - seed_even_cnt>=3.3 | support=3 | hit_rate_true=1.000 | gap=0.680
+  - seed_odd_cnt==0 | support=3 | hit_rate_true=1.000 | gap=0.680
+  - seed_odd_cnt<=0.7 | support=3 | hit_rate_true=1.000 | gap=0.680
+  - seed_pairwise_absdiff_sum_in[22,23] | support=3 | hit_rate_true=1.000 | gap=0.680
+  - seed_pos1_in[7,8] | support=3 | hit_rate_true=1.000 | gap=0.680
+
+Top separator traits (0 hits when trait true):
+  - seed_sum_mod4==1 | support=8 | hits_true=0 | member_hit_rate_when_false=0.550
+
+Top stacked bucket candidates:
+  - seed_sum_mod5==0 AND cnt_0_3<=2 | support=6 | hit_rate=1.000 | lift=0.607
+  - seed_sum_mod5<=0 AND cnt_0_3<=2 | support=6 | hit_rate=1.000 | lift=0.607
+  - seed_sum_mod5<=0.75 AND cnt_0_3<=2 | support=6 | hit_rate=1.000 | lift=0.607
+  - cnt_0_3<=2 AND seed_sum_mod5==0 | support=6 | hit_rate=1.000 | lift=0.607
+  - cnt_0_3_in[1,2] AND seed_sum_mod5==0 | support=6 | hit_rate=1.000 | lift=0.607
+  - seed_middle_sum>=4 AND seed_sum_mod5==0 | support=6 | hit_rate=1.000 | lift=0.607
+  - seed_has1==0 AND seed_sum_mod5==0 | support=6 | hit_rate=1.000 | lift=0.607
+  - seed_has1<=0 AND seed_sum_mod5==0 | support=6 | hit_rate=1.000 | lift=0.607
+  - seed_cnt1==0 AND seed_sum_mod5==0 | support=6 | hit_rate=1.000 | lift=0.607
+  - seed_cnt1<=0 AND seed_sum_mod5==0 | support=6 | hit_rate=1.000 | lift=0.607
+
+=== MEMBER 0225 ===
+Top single traits:
+  - seed_highlow_pattern==HLHL | support=3 | hit_rate_true=1.000 | gap=0.800
+  - seed_pairwise_absdiff_sum_in[24,25] | support=2 | hit_rate_true=1.000 | gap=0.769
+  - seed_adj_absdiff_sum_in[20,21] | support=2 | hit_rate_true=1.000 | gap=0.769
+  - seed_adj_absdiff_min_in[5,6] | support=2 | hit_rate_true=1.000 | gap=0.769
+  - seed_sum==7 | support=1 | hit_rate_true=1.000 | gap=0.741
+  - seed_sum==16 | support=1 | hit_rate_true=1.000 | gap=0.741
+  - seed_sum_lastdigit==6 | support=1 | hit_rate_true=1.000 | gap=0.741
+  - seed_pairwise_absdiff_sum==13 | support=1 | hit_rate_true=1.000 | gap=0.741
+  - seed_pairwise_absdiff_sum==24 | support=1 | hit_rate_true=1.000 | gap=0.741
+  - seed_pairwise_absdiff_sum==25 | support=1 | hit_rate_true=1.000 | gap=0.741
+
+Top separator traits (0 hits when trait true):
+  - seed_sum_mod3==0 | support=8 | hits_true=0 | member_hit_rate_when_false=0.400
+  - seed_sum_mod3<=0 | support=8 | hits_true=0 | member_hit_rate_when_false=0.400
+
+Top stacked bucket candidates:
+  - seed_sum_mod5_in[1,3] AND cnt_4_6==1 | support=7 | hit_rate=0.857 | lift=0.571
+  - cnt_4_6==1 AND seed_sum_mod5_in[1,3] | support=7 | hit_rate=0.857 | lift=0.571
+  - seed_pairwise_absdiff_min<=1 AND cnt_4_6==1 AND seed_sum_mod5_in[1,3] | support=7 | hit_rate=0.857 | lift=0.571
+  - seed_pairwise_absdiff_min_in[0,1] AND cnt_4_6==1 AND seed_sum_mod5_in[1,3] | support=7 | hit_rate=0.857 | lift=0.571
+  - seed_sum_lastdigit_in[1,3] AND cnt_4_6>=1 | support=6 | hit_rate=0.833 | lift=0.548
+  - seed_sum_mod3>=1 AND seed_pos1_in[5,6] | support=6 | hit_rate=0.833 | lift=0.548
+  - seed_sum_mod3_in[1,2] AND seed_pos1_in[5,6] | support=6 | hit_rate=0.833 | lift=0.548
+  - seed_sum_mod3==1 AND seed_sum_mod5_in[1,3] | support=6 | hit_rate=0.833 | lift=0.548
+  - seed_pos1_in[5,6] AND seed_sum_mod3>=1 | support=6 | hit_rate=0.833 | lift=0.548
+  - seed_first_last_sum_in[5,6] AND seed_sum_mod3>=1 | support=6 | hit_rate=0.833 | lift=0.548
+
+=== MEMBER 0255 ===
+Top single traits:
+  - seed_sum_mod5==4 | support=4 | hit_rate_true=1.000 | gap=0.792
+  - seed_sum_mod5>=4 | support=4 | hit_rate_true=1.000 | gap=0.792
+  - seed_sum==9 | support=3 | hit_rate_true=1.000 | gap=0.760
+  - seed_sum_lastdigit==9 | support=3 | hit_rate_true=1.000 | gap=0.760
+  - seed_sum_lastdigit>=8.3 | support=3 | hit_rate_true=1.000 | gap=0.760
+  - seed_pos1==1 | support=3 | hit_rate_true=1.000 | gap=0.760
+  - seed_pos1<=1.7 | support=3 | hit_rate_true=1.000 | gap=0.760
+  - seed_first_last_sum==1 | support=3 | hit_rate_true=1.000 | gap=0.760
+  - seed_first_last_sum<=1.7 | support=3 | hit_rate_true=1.000 | gap=0.760
+  - seed_middle_sum==1 | support=3 | hit_rate_true=1.000 | gap=0.760
+
+Top separator traits (0 hits when trait true):
+  - seed_pos1_in[4,7] | support=12 | hits_true=0 | member_hit_rate_when_false=0.562
+  - seed_pos1_in[5,8] | support=12 | hits_true=0 | member_hit_rate_when_false=0.562
+  - seed_first_last_sum_in[4,7] | support=12 | hits_true=0 | member_hit_rate_when_false=0.562
+  - seed_first_last_sum_in[5,8] | support=12 | hits_true=0 | member_hit_rate_when_false=0.562
+  - seed_pos1_in[5,7] | support=11 | hits_true=0 | member_hit_rate_when_false=0.529
+  - seed_first_last_sum_in[5,7] | support=11 | hits_true=0 | member_hit_rate_when_false=0.529
+  - seed_middle_sum>=9 | support=11 | hits_true=0 | member_hit_rate_when_false=0.529
+  - seed_pos1_in[4,6] | support=10 | hits_true=0 | member_hit_rate_when_false=0.500
+  - seed_first_last_sum_in[4,6] | support=10 | hits_true=0 | member_hit_rate_when_false=0.500
+  - seed_pos1_in[5,6] | support=9 | hits_true=0 | member_hit_rate_when_false=0.474
+
+Top stacked bucket candidates:
+  - cnt_0_3>=3 AND seed_sum_mod4_in[1,2] | support=6 | hit_rate=1.000 | lift=0.679
+  - cnt_0_3_in[3,4] AND seed_sum_mod4_in[1,2] | support=6 | hit_rate=1.000 | lift=0.679
+  - seed_sum<=10.91 AND seed_has4==0 | support=6 | hit_rate=1.000 | lift=0.679
+  - seed_sum_mod4_in[1,2] AND cnt_0_3>=3 | support=6 | hit_rate=1.000 | lift=0.679
+  - seed_has4==0 AND seed_sum<=10.91 | support=6 | hit_rate=1.000 | lift=0.679
+  - seed_has4<=0 AND seed_sum<=10.91 | support=6 | hit_rate=1.000 | lift=0.679
+  - seed_cnt4==0 AND seed_sum<=10.91 | support=6 | hit_rate=1.000 | lift=0.679
+  - seed_cnt4<=0 AND seed_sum<=10.91 | support=6 | hit_rate=1.000 | lift=0.679
+  - seed_middle_sum<=8 AND cnt_4_6==0 AND seed_sum_mod4_in[1,2] | support=6 | hit_rate=1.000 | lift=0.679
+  - seed_high_cnt<=1 AND seed_sum_mod4_in[1,2] AND cnt_0_3>=3 | support=6 | hit_rate=1.000 | lift=0.679

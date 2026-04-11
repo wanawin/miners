@@ -1,0 +1,2 @@
+pair,trait,support,preferred_support_met,winner_member,loser_member,winner_rate,loser_rate,pair_gap,stream_count,month_count,rate_0025,rate_0225,left_count,right_count
+0025_vs_0225,spread_bucket=spread_3_4,41,1,0025,0225,0.6341463414634146,0.36585365853658536,0.2682926829268293,27,26,0.6341463414634146,0.36585365853658536,26,15
