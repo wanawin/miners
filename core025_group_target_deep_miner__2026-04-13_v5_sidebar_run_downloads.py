@@ -1,0 +1,612 @@
+#!/usr/bin/env python3
+"""
+BUILD: core025_group_target_deep_miner__2026-04-13_v5_sidebar_run_downloads
+
+Full replacement file.
+- Upload + settings in sidebar
+- Explicit Run miner button
+- Explicit per-group download sections
+- Preview tables on main page
+- Arrow-safe numeric handling
+- Self-identifying export filenames
+"""
+
+from __future__ import annotations
+
+import io
+import re
+from collections import Counter
+from typing import Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+import streamlit as st
+
+BUILD_MARKER = "BUILD: core025_group_target_deep_miner__2026-04-13_v5_sidebar_run_downloads"
+BUILD_SLUG = BUILD_MARKER.replace("BUILD: ", "")
+
+
+# ------------------------------------------------------------
+# Basic helpers
+# ------------------------------------------------------------
+def df_to_csv_bytes(df: pd.DataFrame) -> bytes:
+    return df.to_csv(index=False).encode("utf-8")
+
+
+def norm_seed(x: object) -> Optional[str]:
+    if pd.isna(x):
+        return None
+    s = re.sub(r"\D", "", str(x))
+    return s if len(s) == 4 else None
+
+
+def safe_str(x: object) -> str:
+    if pd.isna(x):
+        return ""
+    return str(x).strip()
+
+
+def load_table(uploaded_file) -> pd.DataFrame:
+    name = uploaded_file.name.lower()
+    if name.endswith(".csv"):
+        return pd.read_csv(uploaded_file)
+    if name.endswith(".txt") or name.endswith(".tsv"):
+        data = uploaded_file.getvalue()
+        try:
+            return pd.read_csv(io.BytesIO(data), sep="\t")
+        except Exception:
+            return pd.read_csv(io.BytesIO(data), sep=None, engine="python")
+    if name.endswith(".xlsx") or name.endswith(".xls"):
+        return pd.read_excel(uploaded_file)
+    raise ValueError(f"Unsupported file type: {uploaded_file.name}")
+
+
+def find_col(df: pd.DataFrame, candidates: List[str], required: bool = True) -> Optional[str]:
+    normalized = {re.sub(r"[^a-z0-9]+", "", str(c).lower()): c for c in df.columns}
+    for cand in candidates:
+        key = re.sub(r"[^a-z0-9]+", "", cand.lower())
+        if key in normalized:
+            return normalized[key]
+    for cand in candidates:
+        key = re.sub(r"[^a-z0-9]+", "", cand.lower())
+        for nkey, col in normalized.items():
+            if key and key in nkey:
+                return col
+    if required:
+        raise KeyError(f"Required column not found. Tried {candidates}. Available columns: {list(df.columns)}")
+    return None
+
+
+# ------------------------------------------------------------
+# Feature engineering
+# ------------------------------------------------------------
+def as_pair_tokens(seed: str) -> List[str]:
+    ds = list(seed)
+    out = []
+    for i in range(len(ds)):
+        for j in range(i + 1, len(ds)):
+            out.append("".join(sorted((ds[i], ds[j]))))
+    return out
+
+
+def as_adj_pairs(seed: str) -> List[str]:
+    return [seed[i:i + 2] for i in range(len(seed) - 1)]
+
+
+def compute_features(seed: str) -> Dict[str, object]:
+    d = [int(x) for x in seed]
+    cnt = Counter(d)
+    s = sum(d)
+    spread = max(d) - min(d)
+    parity = "".join("E" if x % 2 == 0 else "O" for x in d)
+    highlow = "".join("H" if x >= 5 else "L" for x in d)
+    ordered_adj = as_adj_pairs(seed)
+
+    consec_links = 0
+    unique_sorted = sorted(set(d))
+    for a, b in zip(unique_sorted[:-1], unique_sorted[1:]):
+        if b - a == 1:
+            consec_links += 1
+
+    features: Dict[str, object] = {
+        "seed_sum": s,
+        "seed_spread": spread,
+        "seed_even_cnt": int(sum(x % 2 == 0 for x in d)),
+        "seed_odd_cnt": int(sum(x % 2 == 1 for x in d)),
+        "seed_high_cnt": int(sum(x >= 5 for x in d)),
+        "seed_low_cnt": int(sum(x <= 4 for x in d)),
+        "seed_unique_digits": len(cnt),
+        "seed_has_pair": int(max(cnt.values()) >= 2),
+        "seed_has_trip": int(max(cnt.values()) >= 3),
+        "seed_has_quad": int(max(cnt.values()) >= 4),
+        "seed_parity_pattern": parity,
+        "seed_highlow_pattern": highlow,
+        "seed_sorted": "".join(map(str, sorted(d))),
+        "seed_pair_tokens": "|".join(sorted(as_pair_tokens(seed))),
+        "seed_adj_pairs_ordered": "|".join(ordered_adj),
+        "seed_same_adjacent_count": int(sum(d[i] == d[i + 1] for i in range(3))),
+        "seed_consec_links": consec_links,
+        "seed_pos1": d[0],
+        "seed_pos2": d[1],
+        "seed_pos3": d[2],
+        "seed_pos4": d[3],
+        "seed_outer_equal": int(d[0] == d[3]),
+        "seed_inner_equal": int(d[1] == d[2]),
+        "seed_palindrome_like": int(d[0] == d[3] and d[1] == d[2]),
+        "seed_absdiff_outer_inner": abs((d[0] + d[3]) - (d[1] + d[2])),
+    }
+
+    repeat_shape = "".join(map(str, sorted(cnt.values(), reverse=True)))
+    features["seed_repeat_shape"] = {
+        "1111": "all_unique",
+        "211": "one_pair",
+        "22": "two_pair",
+        "31": "trip",
+        "4": "quad",
+    }.get(repeat_shape, f"shape_{repeat_shape}")
+
+    for k in range(10):
+        features[f"seed_has{k}"] = int(k in cnt)
+        features[f"seed_cnt{k}"] = int(cnt.get(k, 0))
+
+    return features
+
+
+def build_feature_table(df: pd.DataFrame) -> pd.DataFrame:
+    out = df.copy()
+    out["PrevSeed"] = out["PrevSeed"].apply(norm_seed)
+    out = out.dropna(subset=["PrevSeed"]).reset_index(drop=True)
+
+    feat_series = out["PrevSeed"].apply(compute_features)
+    feat_df = feat_series.apply(pd.Series)
+    out = pd.concat([out.reset_index(drop=True), feat_df.reset_index(drop=True)], axis=1)
+    out["BuildMarker"] = BUILD_SLUG
+    return out
+
+
+# ------------------------------------------------------------
+# Trait matrix
+# ------------------------------------------------------------
+def categorical_series_traits(s: pd.Series, prefix: str, min_support: int = 2) -> Dict[str, pd.Series]:
+    out: Dict[str, pd.Series] = {}
+    vals = s.astype(str)
+    vc = vals.value_counts(dropna=False)
+    for value, count in vc.items():
+        if int(count) >= int(min_support):
+            out[f"{prefix}=={value}"] = vals == str(value)
+    return out
+
+
+def numeric_series_traits(s: pd.Series, prefix: str, min_non_na: int = 10) -> Dict[str, pd.Series]:
+    out: Dict[str, pd.Series] = {}
+    vals = pd.to_numeric(s, errors="coerce")
+    if int(vals.notna().sum()) < int(min_non_na):
+        return out
+
+    uniques = sorted(set(vals.dropna().astype(float).tolist()))
+    if len(uniques) <= 20:
+        for u in uniques:
+            label = str(int(u)) if float(u).is_integer() else str(round(float(u), 4))
+            out[f"{prefix}=={label}"] = vals == u
+
+    try:
+        for q in [0.10, 0.25, 0.50, 0.75, 0.90]:
+            thresh = vals.quantile(q)
+            if pd.isna(thresh):
+                continue
+            label = str(int(thresh)) if float(thresh).is_integer() else str(round(float(thresh), 4))
+            out[f"{prefix}<={label}"] = vals <= thresh
+            out[f"{prefix}>={label}"] = vals >= thresh
+    except Exception:
+        pass
+
+    return out
+
+
+def build_trait_matrix(df_feat: pd.DataFrame, mine_level: str) -> pd.DataFrame:
+    trait_cols: Dict[str, pd.Series] = {}
+
+    base_numeric = [
+        "seed_sum", "seed_spread", "seed_even_cnt", "seed_odd_cnt", "seed_high_cnt",
+        "seed_low_cnt", "seed_unique_digits", "seed_same_adjacent_count",
+        "seed_consec_links", "seed_absdiff_outer_inner",
+        "seed_pos1", "seed_pos2", "seed_pos3", "seed_pos4",
+    ]
+    base_categorical = [
+        "seed_parity_pattern", "seed_highlow_pattern", "seed_repeat_shape",
+        "seed_sorted", "WinningMember", "OutcomeGroup",
+    ]
+
+    for c in base_numeric:
+        if c in df_feat.columns:
+            trait_cols.update(numeric_series_traits(df_feat[c], c))
+
+    for c in base_categorical:
+        if c in df_feat.columns:
+            trait_cols.update(categorical_series_traits(df_feat[c], c))
+
+    for c in df_feat.columns:
+        if c.startswith("seed_has") or c.startswith("seed_cnt"):
+            series = pd.to_numeric(df_feat[c], errors="coerce").fillna(0)
+            if int((series > 0).sum()) >= 2:
+                trait_cols.update(numeric_series_traits(series, c, min_non_na=2))
+
+    if mine_level == "expanded":
+        if "seed_repeat_shape" in df_feat.columns and "seed_parity_pattern" in df_feat.columns:
+            combo = df_feat["seed_repeat_shape"].astype(str) + "|" + df_feat["seed_parity_pattern"].astype(str)
+            trait_cols.update(categorical_series_traits(combo, "x_repeatshape_parity"))
+        if "seed_repeat_shape" in df_feat.columns and "seed_highlow_pattern" in df_feat.columns:
+            combo = df_feat["seed_repeat_shape"].astype(str) + "|" + df_feat["seed_highlow_pattern"].astype(str)
+            trait_cols.update(categorical_series_traits(combo, "x_repeatshape_highlow"))
+        if "seed_unique_digits" in df_feat.columns and "seed_even_cnt" in df_feat.columns:
+            combo = df_feat["seed_unique_digits"].astype(str) + "|" + df_feat["seed_even_cnt"].astype(str)
+            trait_cols.update(categorical_series_traits(combo, "x_unique_even"))
+
+    trait_df = pd.DataFrame(trait_cols, index=df_feat.index)
+    if len(trait_df.columns) == 0:
+        return pd.DataFrame(index=df_feat.index)
+    return trait_df.fillna(False).astype(bool)
+
+
+# ------------------------------------------------------------
+# Scoring
+# ------------------------------------------------------------
+def score_traits_one_vs_rest(trait_df: pd.DataFrame, y: pd.Series, target_value: str) -> pd.DataFrame:
+    target = (y.astype(str) == str(target_value)).astype(int)
+    total_hits = int(target.sum())
+    total_n = int(len(target))
+    base_rate = (total_hits / total_n) if total_n else 0.0
+
+    rows = []
+    for trait in trait_df.columns:
+        mask = trait_df[trait].fillna(False).astype(bool)
+        support = int(mask.sum())
+        if support == 0 or support == total_n:
+            continue
+
+        hits_true = int(target[mask].sum())
+        hits_false = int(target[~mask].sum())
+        non_true = int((~mask).sum())
+
+        hit_rate_true = (hits_true / support) if support else 0.0
+        hit_rate_false = (hits_false / non_true) if non_true else 0.0
+        gap = hit_rate_true - hit_rate_false
+        lift = (hit_rate_true / base_rate) if base_rate > 0 else np.nan
+
+        rows.append(
+            {
+                "target_value": str(target_value),
+                "trait": trait,
+                "support": support,
+                "hits_true": hits_true,
+                "hit_rate_true": hit_rate_true,
+                "hits_false": hits_false,
+                "hit_rate_false": hit_rate_false,
+                "gap": gap,
+                "base_rate": base_rate,
+                "lift": lift,
+                "separator_flag": int(hit_rate_false == 0),
+                "BuildMarker": BUILD_SLUG,
+            }
+        )
+
+    out = pd.DataFrame(rows)
+    if len(out) == 0:
+        return out
+    return out.sort_values(
+        ["gap", "support", "hit_rate_true", "hits_true"],
+        ascending=[False, False, False, False]
+    ).reset_index(drop=True)
+
+
+def build_stacked_buckets(trait_df: pd.DataFrame, y: pd.Series, target_value: str, base_scores: pd.DataFrame, top_k_traits: int) -> pd.DataFrame:
+    if len(base_scores) == 0 or len(trait_df.columns) == 0:
+        return pd.DataFrame()
+
+    target = (y.astype(str) == str(target_value)).astype(int)
+    top_traits = [t for t in base_scores["trait"].head(int(top_k_traits)).tolist() if t in trait_df.columns]
+    rows = []
+
+    for i in range(len(top_traits)):
+        for j in range(i + 1, len(top_traits)):
+            t1, t2 = top_traits[i], top_traits[j]
+            mask = trait_df[t1] & trait_df[t2]
+            support = int(mask.sum())
+            if support < 2:
+                continue
+            hits = int(target[mask].sum())
+            non_hits = int(support - hits)
+            hit_rate = (hits / support) if support else 0.0
+            rows.append(
+                {
+                    "target_value": str(target_value),
+                    "stack": f"{t1} AND {t2}",
+                    "support": support,
+                    "hits_true": hits,
+                    "non_hits": non_hits,
+                    "hit_rate_true": hit_rate,
+                    "BuildMarker": BUILD_SLUG,
+                }
+            )
+
+    out = pd.DataFrame(rows)
+    if len(out) == 0:
+        return out
+    return out.sort_values(["hit_rate_true", "support", "hits_true"], ascending=[False, False, False]).reset_index(drop=True)
+
+
+def filter_candidate_traits(scored: pd.DataFrame, min_support: int, min_gap: float, min_hit_rate_true: float, min_lift: float) -> pd.DataFrame:
+    if len(scored) == 0:
+        return scored.copy()
+    out = scored.copy()
+    out = out[
+        (out["support"] >= int(min_support)) &
+        (out["gap"] >= float(min_gap)) &
+        (out["hit_rate_true"] >= float(min_hit_rate_true))
+    ]
+    if "lift" in out.columns:
+        out = out[(out["lift"].fillna(0) >= float(min_lift))]
+    return out.reset_index(drop=True)
+
+
+# ------------------------------------------------------------
+# Main app
+# ------------------------------------------------------------
+def main() -> None:
+    st.set_page_config(page_title="Core Group Target Deep Miner", layout="wide")
+    st.title("Core Group Target Deep Miner")
+    st.caption(BUILD_MARKER)
+
+    # Persist outputs so downloads do not vanish after interaction
+    if "miner_outputs" not in st.session_state:
+        st.session_state["miner_outputs"] = None
+
+    with st.sidebar:
+        st.markdown(f"**{BUILD_MARKER}**")
+        uploaded = st.file_uploader(
+            "Upload grouped seed-event CSV",
+            type=["csv", "txt", "tsv", "xlsx", "xls"],
+            key="uploaded_grouped_seed_event",
+        )
+
+        target_mode = st.selectbox("Target mode", ["OutcomeGroup", "WinningMember"], index=0)
+        mine_level = st.selectbox("Mine level", ["basic", "expanded"], index=1)
+        rows_to_show = st.number_input("Rows to preview", min_value=10, max_value=500, value=50, step=10)
+
+        st.markdown("### Candidate filters")
+        min_support = st.number_input("Minimum support", min_value=1, max_value=5000, value=5, step=1)
+        min_gap = st.number_input("Minimum gap", min_value=0.0, max_value=1.0, value=0.05, step=0.01, format="%.2f")
+        min_hit_rate_true = st.number_input("Minimum hit_rate_true", min_value=0.0, max_value=1.0, value=0.20, step=0.01, format="%.2f")
+        min_lift = st.number_input("Minimum lift", min_value=0.0, max_value=100.0, value=1.10, step=0.05, format="%.2f")
+
+        st.markdown("### Export limits")
+        max_filtered_rows = st.number_input("Filtered candidate rows per target", min_value=10, max_value=5000, value=250, step=10)
+        max_separator_rows = st.number_input("Separator rows per target", min_value=10, max_value=5000, value=250, step=10)
+        max_stacked_rows = st.number_input("Stacked bucket rows per target", min_value=10, max_value=5000, value=250, step=10)
+        stacked_top_k_traits = st.number_input("Top traits used to build stacked buckets", min_value=5, max_value=200, value=30, step=5)
+
+        run_clicked = st.button("Run miner", type="primary", use_container_width=True)
+
+    if run_clicked:
+        if uploaded is None:
+            st.error("Please upload a grouped seed-event CSV first.")
+        else:
+            try:
+                raw = load_table(uploaded)
+
+                prev_seed_col = find_col(raw, ["PrevSeed", "seed", "Prev Seed"])
+                winning_member_col = find_col(raw, ["WinningMember", "winning_member"], required=False)
+                outcome_group_col = find_col(raw, ["OutcomeGroup", "outcome_group"], required=False)
+                play_date_col = find_col(raw, ["PlayDate", "transition_date", "date"], required=False)
+                stream_col = find_col(raw, ["StreamKey", "stream"], required=False)
+
+                df = pd.DataFrame()
+                df["PrevSeed"] = raw[prev_seed_col]
+                df["WinningMember"] = raw[winning_member_col] if winning_member_col else ""
+                df["OutcomeGroup"] = raw[outcome_group_col] if outcome_group_col else ""
+                df["PlayDate"] = raw[play_date_col] if play_date_col else ""
+                df["StreamKey"] = raw[stream_col] if stream_col else ""
+
+                df["PrevSeed"] = df["PrevSeed"].apply(norm_seed)
+                df["WinningMember"] = df["WinningMember"].apply(safe_str)
+                df["OutcomeGroup"] = df["OutcomeGroup"].apply(safe_str)
+                df["PlayDate"] = df["PlayDate"].apply(safe_str)
+                df["StreamKey"] = df["StreamKey"].apply(safe_str)
+
+                df = df.dropna(subset=["PrevSeed"]).reset_index(drop=True)
+
+                if target_mode == "OutcomeGroup":
+                    df = df[df["OutcomeGroup"] != ""].reset_index(drop=True)
+                    if len(df) == 0:
+                        raise ValueError("Target column 'OutcomeGroup' is missing or empty after filtering.")
+                    target_col = "OutcomeGroup"
+                else:
+                    df = df[df["WinningMember"] != ""].reset_index(drop=True)
+                    if len(df) == 0:
+                        raise ValueError("Target column 'WinningMember' is missing or empty after filtering.")
+                    target_col = "WinningMember"
+
+                feat_df = build_feature_table(df)
+                trait_df = build_trait_matrix(feat_df, mine_level=mine_level)
+                if len(trait_df.columns) == 0:
+                    raise ValueError("No traits could be built from this dataset.")
+
+                targets = sorted([x for x in feat_df[target_col].dropna().astype(str).unique().tolist() if x.strip()])
+
+                if not targets:
+                    raise ValueError(f"No usable target values found in column '{target_col}'.")
+
+                all_scores = []
+                per_target_outputs = {}
+                grouped_rows_exports = {}
+
+                for target in targets:
+                    grouped_rows = feat_df[feat_df[target_col].astype(str) == str(target)].copy().reset_index(drop=True)
+                    grouped_rows_exports[target] = grouped_rows
+
+                    scored = score_traits_one_vs_rest(trait_df, feat_df[target_col], target)
+                    filtered = filter_candidate_traits(scored, min_support, min_gap, min_hit_rate_true, min_lift).head(int(max_filtered_rows)).reset_index(drop=True)
+                    separators = scored[scored["separator_flag"] == 1].head(int(max_separator_rows)).reset_index(drop=True)
+                    stacked = build_stacked_buckets(trait_df, feat_df[target_col], target, scored, int(stacked_top_k_traits)).head(int(max_stacked_rows)).reset_index(drop=True)
+
+                    per_target_outputs[target] = {
+                        "rows": grouped_rows,
+                        "single_traits": scored,
+                        "filtered_candidates": filtered,
+                        "separator_traits": separators,
+                        "stacked_buckets": stacked,
+                    }
+
+                    if len(scored) > 0:
+                        all_scores.append(scored)
+
+                all_scores_df = pd.concat(all_scores, ignore_index=True) if all_scores else pd.DataFrame()
+
+                summary_rows = []
+                for target in targets:
+                    summary_rows.append(
+                        {
+                            "target_value": target,
+                            "grouped_rows": int(len(per_target_outputs[target]["rows"])),
+                            "single_traits": int(len(per_target_outputs[target]["single_traits"])),
+                            "filtered_candidates": int(len(per_target_outputs[target]["filtered_candidates"])),
+                            "separator_traits": int(len(per_target_outputs[target]["separator_traits"])),
+                            "stacked_buckets": int(len(per_target_outputs[target]["stacked_buckets"])),
+                            "BuildMarker": BUILD_SLUG,
+                        }
+                    )
+                summary_df = pd.DataFrame(summary_rows)
+
+                st.session_state["miner_outputs"] = {
+                    "build_marker": BUILD_SLUG,
+                    "source_name": uploaded.name,
+                    "usable_rows": len(feat_df),
+                    "target_mode": target_mode,
+                    "target_col": target_col,
+                    "targets": targets,
+                    "feature_table": feat_df,
+                    "trait_matrix_cols": len(trait_df.columns),
+                    "all_scores": all_scores_df,
+                    "summary": summary_df,
+                    "per_target": per_target_outputs,
+                }
+
+            except Exception as e:
+                st.session_state["miner_outputs"] = None
+                st.error(str(e))
+
+    outputs = st.session_state.get("miner_outputs")
+    if not outputs:
+        st.info("Use the sidebar to upload the file, choose settings, then click Run miner.")
+        return
+
+    st.success("Mining complete")
+    st.write(f"**Build:** {outputs['build_marker']}")
+    st.write(f"**Source file:** {outputs['source_name']}")
+    st.write(f"**Usable rows:** {outputs['usable_rows']}")
+    st.write(f"**Target mode:** {outputs['target_mode']}")
+    st.write(f"**Target groups found:** {', '.join(outputs['targets'])}")
+    st.write(f"**Trait columns built:** {outputs['trait_matrix_cols']}")
+
+    st.subheader("Run summary")
+    st.dataframe(outputs["summary"], use_container_width=True, hide_index=True)
+
+    st.subheader("Global downloads")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.download_button(
+            "Download all target trait scores",
+            data=df_to_csv_bytes(outputs["all_scores"]),
+            file_name=f"trait_scores_all_targets__{BUILD_SLUG}.csv",
+            mime="text/csv",
+            use_container_width=True,
+            key="download_all_scores",
+        )
+    with c2:
+        st.download_button(
+            "Download feature table",
+            data=df_to_csv_bytes(outputs["feature_table"]),
+            file_name=f"feature_table__{BUILD_SLUG}.csv",
+            mime="text/csv",
+            use_container_width=True,
+            key="download_feature_table",
+        )
+    with c3:
+        st.download_button(
+            "Download run summary",
+            data=df_to_csv_bytes(outputs["summary"]),
+            file_name=f"run_summary__{BUILD_SLUG}.csv",
+            mime="text/csv",
+            use_container_width=True,
+            key="download_summary",
+        )
+
+    for target in outputs["targets"]:
+        block = outputs["per_target"][target]
+        st.markdown("---")
+        st.subheader(str(target))
+
+        d1, d2, d3, d4, d5 = st.columns(5)
+        with d1:
+            st.download_button(
+                f"Download {target} rows",
+                data=df_to_csv_bytes(block["rows"]),
+                file_name=f"{target}__rows__{BUILD_SLUG}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key=f"download_rows_{target}",
+            )
+        with d2:
+            st.download_button(
+                f"Download {target} single traits",
+                data=df_to_csv_bytes(block["single_traits"]),
+                file_name=f"{target}__single_traits__{BUILD_SLUG}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key=f"download_single_{target}",
+            )
+        with d3:
+            st.download_button(
+                f"Download {target} filtered candidates",
+                data=df_to_csv_bytes(block["filtered_candidates"]),
+                file_name=f"{target}__filtered_candidates__{BUILD_SLUG}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key=f"download_filtered_{target}",
+            )
+        with d4:
+            st.download_button(
+                f"Download {target} separator traits",
+                data=df_to_csv_bytes(block["separator_traits"]),
+                file_name=f"{target}__separator_traits__{BUILD_SLUG}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key=f"download_sep_{target}",
+            )
+        with d5:
+            st.download_button(
+                f"Download {target} stacked buckets",
+                data=df_to_csv_bytes(block["stacked_buckets"]),
+                file_name=f"{target}__stacked_buckets__{BUILD_SLUG}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key=f"download_stack_{target}",
+            )
+
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(
+            ["Rows preview", "Single traits preview", "Filtered candidates preview", "Separator traits preview", "Stacked buckets preview"]
+        )
+        with tab1:
+            st.dataframe(block["rows"].head(int(rows_to_show)), use_container_width=True, hide_index=True)
+        with tab2:
+            st.dataframe(block["single_traits"].head(int(rows_to_show)), use_container_width=True, hide_index=True)
+        with tab3:
+            st.dataframe(block["filtered_candidates"].head(int(rows_to_show)), use_container_width=True, hide_index=True)
+        with tab4:
+            st.dataframe(block["separator_traits"].head(int(rows_to_show)), use_container_width=True, hide_index=True)
+        with tab5:
+            st.dataframe(block["stacked_buckets"].head(int(rows_to_show)), use_container_width=True, hide_index=True)
+
+
+if __name__ == "__main__":
+    main()
